@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QAR — Simulador de Ventas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0E0818;--bg2:#160D24;--card:#1E1035;--card2:#261540;
+    --lila:#8B5CF6;--lila2:#6D3FD0;--lila-lt:#A78BFA;
+    --gold:#C9A84C;--goldd:#F5D770;--green:#34D399;--green2:#059669;
+    --white:#F5F0FF;--cream:#E9DFFF;--muted:#9D8AC0;--border:rgba(139,92,246,0.2);
+    --red:#F87171;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;padding:24px 16px 60px;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 80% 10%,rgba(109,63,208,0.25) 0%,transparent 50%),radial-gradient(ellipse at 10% 90%,rgba(52,211,153,0.08) 0%,transparent 50%);pointer-events:none;z-index:0;}
+  .wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;}
+
+  header{text-align:center;margin-bottom:28px;}
+  .logo-name{font-family:'DM Serif Display',serif;font-size:clamp(36px,9vw,54px);letter-spacing:4px;background:linear-gradient(135deg,var(--lila-lt),var(--goldd));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;}
+  .logo-sub{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-top:6px;}
+  .header-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--lila),transparent);margin:12px auto 0;}
+
+  .sec-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--lila-lt);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:14px;}
+
+  /* PRODUCTO ROW */
+  .prod-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-bottom:10px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;}
+  .prod-row select{background:transparent;border:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%;cursor:pointer;}
+  .prod-row select option{background:#1E1035;}
+  .prod-inv{width:90px;background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:7px 10px;color:var(--goldd);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;outline:none;text-align:right;}
+  .prod-inv:focus{border-color:var(--gold);}
+  .btn-remove{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);border-radius:4px;color:var(--red);width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .btn-remove:hover{background:rgba(248,113,113,0.2);}
+  .prod-info{grid-column:1/-1;display:flex;gap:16px;font-size:11px;color:var(--muted);padding-top:4px;}
+  .prod-info span{color:var(--lila-lt);}
+
+  .btn-add{width:100%;padding:10px;background:transparent;border:1px dashed var(--border);border-radius:6px;color:var(--lila-lt);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;margin-bottom:4px;}
+  .btn-add:hover{border-color:var(--lila);background:rgba(139,92,246,0.08);}
+
+  /* SLIDERS */
+  .slider-group{margin-bottom:12px;}
+  .slider-header{display:flex;justify-content:space-between;margin-bottom:6px;}
+  .slider-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .slider-val{font-size:13px;font-weight:600;color:var(--white);}
+  .slider-track{position:relative;height:6px;background:var(--bg2);border-radius:10px;margin-bottom:3px;}
+  input[type="range"]{-webkit-appearance:none;width:100%;height:6px;background:transparent;position:absolute;top:0;left:0;cursor:pointer;}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--lila);border:2px solid var(--white);margin-top:-6px;box-shadow:0 0 8px rgba(139,92,246,0.5);}
+  input[type="range"].gold-range::-webkit-slider-thumb{background:var(--gold);box-shadow:0 0 8px rgba(201,168,76,0.5);}
+  input[type="range"].green-range::-webkit-slider-thumb{background:var(--green);box-shadow:0 0 8px rgba(52,211,153,0.5);}
+  .slider-fill{position:absolute;top:0;left:0;height:6px;border-radius:10px;pointer-events:none;}
+  .fill-lila{background:linear-gradient(90deg,var(--lila2),var(--lila-lt));}
+  .fill-gold{background:linear-gradient(90deg,var(--gold),var(--goldd));}
+  .fill-green{background:linear-gradient(90deg,var(--green2),var(--green));}
+  .pct-note{font-size:11px;color:var(--muted);}
+
+  .btn-calc{width:100%;padding:14px;background:linear-gradient(135deg,var(--lila2),var(--lila));border:none;border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:6px;}
+  .btn-calc:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(139,92,246,0.35);}
+
+  /* RESULTS */
+  #resultados{display:none;}
+
+  .result-hero{background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid rgba(52,211,153,0.35);border-radius:8px;padding:28px 20px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden;}
+  .result-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);}
+  .rh-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-bottom:8px;}
+  .rh-amount{font-family:'DM Serif Display',serif;font-size:clamp(52px,14vw,80px);color:var(--green);line-height:1;filter:drop-shadow(0 0 28px rgba(52,211,153,0.45));}
+  .rh-sub{font-size:13px;color:var(--muted);margin-top:8px;}
+  .rh-multi{display:inline-block;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:20px;padding:5px 16px;font-size:13px;font-weight:600;color:var(--green);margin-top:10px;}
+
+  /* CANAL CARDS */
+  .canal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+  .ccard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 10px;text-align:center;position:relative;overflow:hidden;}
+  .ccard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .ccard.cl::before{background:var(--lila);}
+  .ccard.cg::before{background:var(--gold);}
+  .ccard.ce::before{background:var(--green);}
+  .ccard-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .ccard-pzas{font-size:11px;color:var(--muted);margin-bottom:5px;}
+  .ccard-amt{font-family:'DM Serif Display',serif;font-size:clamp(18px,4vw,24px);line-height:1;}
+  .cl .ccard-amt{color:var(--lila-lt);} .cg .ccard-amt{color:var(--goldd);} .ce .ccard-amt{color:var(--green);}
+
+  /* PRODUCT BREAKDOWN */
+  .prod-breakdown{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+  .pb-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;padding:10px 14px;background:var(--card2);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+  .pb-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;padding:11px 14px;border-top:1px solid var(--border);font-size:12px;align-items:center;}
+  .pb-row:last-child{}
+  .pb-name{color:var(--cream);font-weight:500;}
+  .pb-inv{color:var(--muted);}
+  .pb-pzas{color:var(--lila-lt);}
+  .pb-total{color:var(--goldd);font-weight:600;}
+  .pb-footer{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;padding:11px 14px;border-top:1px solid rgba(52,211,153,0.2);background:rgba(52,211,153,0.05);font-size:13px;font-weight:600;}
+  .pb-footer .pb-name{color:var(--green);}
+  .pb-footer .pb-total{color:var(--green);}
+
+  /* DETAIL TABLE */
+  .detail-table{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+  .dt-row{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);font-size:13px;}
+  .dt-row:last-child{border-bottom:none;}
+  .dt-row.total{background:var(--card2);font-weight:600;font-size:14px;}
+  .dt-label{color:var(--muted);}
+  .dt-val{color:var(--white);font-weight:500;}
+  .dt-val.green{color:var(--green);} .dt-val.gold{color:var(--goldd);} .dt-val.lila{color:var(--lila-lt);}
+
+  .tip{background:rgba(139,92,246,0.08);border-left:3px solid var(--lila);border-radius:0 6px 6px 0;padding:12px 14px;font-size:12px;line-height:1.6;color:var(--cream);margin-bottom:12px;}
+  .tip strong{color:var(--lila-lt);}
+  .tip.tg{border-left-color:var(--green);}
+  .tip.tg strong{color:var(--green);}
+
+  .btn-reset{width:100%;padding:11px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;text-transform:uppercase;}
+  .btn-reset:hover{border-color:var(--lila);color:var(--white);}
+
+  #aviso-suma{display:none;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--red);margin-top:8px;}
+
+  @media(max-width:420px){
+    .canal-grid{grid-template-columns:1fr;}
+    .pb-header,.pb-row,.pb-footer{grid-template-columns:2fr 1fr 1fr;}
+    .pb-header>*:nth-child(3),.pb-row>*:nth-child(3),.pb-footer>*:nth-child(3){display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo-name">QAR</div>
+  <div class="logo-sub">Simulador — ¿Cuánto puedo cobrar?</div>
+  <div class="header-line"></div>
+</header>
+
+<div id="formulario">
+
+  <div class="sec-title">Paso 1 — Elige tus productos</div>
+  <div class="card">
+    <div id="productos-lista"></div>
+    <button class="btn-add" onclick="agregarProducto()">+ Agregar otro producto</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 14px;background:var(--card2);border-radius:6px;">
+      <span style="font-size:12px;color:var(--muted);">Inversión total</span>
+      <span style="font-size:15px;font-weight:600;color:var(--goldd)" id="total-inv">$0.00</span>
+    </div>
+  </div>
+
+  <div class="sec-title">Paso 2 — Cómo vas a vender</div>
+  <div class="card">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Se aplica igual a todos los productos. Deben sumar 100%.</p>
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-label">Venta en 2 pagos (precio completo)</span>
+        <span class="slider-val" id="val-2pagos">70%</span>
+      </div>
+      <div class="slider-track">
+        <div class="slider-fill fill-lila" id="fill-2pagos" style="width:70%"></div>
+        <input type="range" id="sl-2pagos" min="0" max="100" value="70" oninput="syncSliders('2pagos')">
+      </div>
+      <p class="pct-note">Vendes a precio comercial completo</p>
+    </div>
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-label">Venta de contado (~20% desc.)</span>
+        <span class="slider-val" id="val-contado">20%</span>
+      </div>
+      <div class="slider-track">
+        <div class="slider-fill fill-gold" id="fill-contado" style="width:20%"></div>
+        <input type="range" class="gold-range" id="sl-contado" min="0" max="100" value="20" oninput="syncSliders('contado')">
+      </div>
+      <p class="pct-note">Pago único con pequeño descuento</p>
+    </div>
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-label">Venta mayoreo</span>
+        <span class="slider-val" id="val-mayoreo">10%</span>
+      </div>
+      <div class="slider-track">
+        <div class="slider-fill fill-green" id="fill-mayoreo" style="width:10%"></div>
+        <input type="range" class="green-range" id="sl-mayoreo" min="0" max="100" value="10" oninput="syncSliders('mayoreo')">
+      </div>
+      <p class="pct-note">A tus revendedoras con mínimo $1,000</p>
+    </div>
+    <div id="aviso-suma">⚠️ Los porcentajes deben sumar exactamente 100%</div>
+  </div>
+
+  <button class="btn-calc" onclick="calcular()">Ver cuánto puedo cobrar →</button>
+</div>
+
+<!-- RESULTADOS -->
+<div id="resultados">
+
+  <div class="result-hero">
+    <div class="rh-label">Si vendes todo, cobras</div>
+    <div class="rh-amount" id="res-total">$0</div>
+    <div class="rh-sub" id="res-sub">Con una inversión total de $0</div>
+    <div class="rh-multi" id="res-multi">×0 tu inversión</div>
+  </div>
+
+  <div class="sec-title">Cuánto cobras por canal</div>
+  <div class="canal-grid">
+    <div class="ccard cl">
+      <div class="ccard-label">2 Pagos</div>
+      <div class="ccard-pzas" id="pzas-2p">0 pzas</div>
+      <div class="ccard-amt" id="ing-2p">$0</div>
+    </div>
+    <div class="ccard cg">
+      <div class="ccard-label">Contado</div>
+      <div class="ccard-pzas" id="pzas-ct">0 pzas</div>
+      <div class="ccard-amt" id="ing-ct">$0</div>
+    </div>
+    <div class="ccard ce">
+      <div class="ccard-label">Mayoreo</div>
+      <div class="ccard-pzas" id="pzas-my">0 pzas</div>
+      <div class="ccard-amt" id="ing-my">$0</div>
+    </div>
+  </div>
+
+  <div class="sec-title">Desglose por producto</div>
+  <div class="prod-breakdown">
+    <div class="pb-header">
+      <span>Producto</span>
+      <span>Invertiste</span>
+      <span>Piezas</span>
+      <span>Cobras</span>
+    </div>
+    <div id="pb-rows"></div>
+    <div class="pb-footer" id="pb-footer">
+      <span class="pb-name">TOTAL</span>
+      <span class="pb-inv" id="pb-total-inv">$0</span>
+      <span class="pb-pzas" id="pb-total-pzas">0 pzas</span>
+      <span class="pb-total" id="pb-total-cobras">$0</span>
+    </div>
+  </div>
+
+  <div class="sec-title">Resumen</div>
+  <div class="detail-table">
+    <div class="dt-row"><span class="dt-label">Total invertido</span><span class="dt-val gold" id="det-inv">$0</span></div>
+    <div class="dt-row"><span class="dt-label">Total de piezas</span><span class="dt-val lila" id="det-pzas">0</span></div>
+    <div class="dt-row"><span class="dt-label">Ventas en 2 pagos</span><span class="dt-val" id="det-v2p">$0</span></div>
+    <div class="dt-row"><span class="dt-label">Ventas de contado</span><span class="dt-val" id="det-vct">$0</span></div>
+    <div class="dt-row"><span class="dt-label">Ventas mayoreo</span><span class="dt-val" id="det-vmy">$0</span></div>
+    <div class="dt-row total"><span class="dt-label">Total que cobras</span><span class="dt-val green" id="det-total">$0</span></div>
+  </div>
+
+  <div class="tip" id="tip-main">...</div>
+  <div class="tip tg">
+    <strong>✓ Sin riesgo:</strong> En QAR, si algo no se vende te lo cambiamos. Tu inversión siempre está protegida.
+  </div>
+
+  <button class="btn-reset" onclick="resetear()">← Calcular de nuevo</button>
+</div>
+
+</div>
+<script>
+const PRODS = {
+  aretes_vip:      {n:'Aretes VIP',        com:240, m1:110, m2:89  },
+  aretes:          {n:'Aretes',            com:180, m1:89,  m2:69  },
+  pulseras:        {n:'Pulseras',          com:280, m1:169, m2:129 },
+  pulseras_vip:    {n:'Pulseras VIP',      com:420, m1:220, m2:177 },
+  pulseras_basicas:{n:'Pulseras Básicas',  com:200, m1:99,  m2:81  },
+  juegos:          {n:'Juegos',            com:280, m1:169, m2:129 },
+  juegos_top:      {n:'Juegos Top',        com:500, m1:250, m2:212 },
+  juegos_vip:      {n:'Juegos VIP',        com:420, m1:220, m2:177 },
+  anillos:         {n:'Anillos',           com:250, m1:139, m2:118 },
+  anillos_vip:     {n:'Anillos VIP',       com:390, m1:220, m2:177 },
+  cadenas:         {n:'Cadenas H&M',       com:280, m1:169, m2:129 },
+  tobilleras:      {n:'Tobilleras',        com:280, m1:169, m2:129 },
+  brazaletes_top:  {n:'Brazaletes Top',    com:500, m1:250, m2:212 },
+  letras:          {n:'Letras',            com:200, m1:99,  m2:81  },
+};
+
+const OPTS = Object.entries(PRODS).map(([k,v])=>`<option value="${k}">${v.n} — Comercial $${v.com}</option>`).join('');
+let rowCount = 0;
+
+function getDescuento(totalInv) {
+  if (totalInv >= 10000) return 0.40;
+  if (totalInv >= 4000)  return 0.30;
+  if (totalInv >= 2700)  return 0.20;
+  if (totalInv >= 1000)  return 0.10;
+  return 0;
+}
+
+function getPrecio(p, inv, totalInv) {
+  // Siempre precio mayoreo especial (esta herramienta es solo para emprendedoras)
+  let base = p.m2;
+  // Descuento extra basado en el TOTAL de compra
+  let d = getDescuento(totalInv);
+  return +(base*(1-d)).toFixed(2);
+}
+
+function fmt(n){ return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function agregarProducto(key='aretes_vip', inv=500) {
+  const id = ++rowCount;
+  const div = document.createElement('div');
+  div.id = 'prow-'+id;
+  div.innerHTML = `
+    <div class="prod-row">
+      <select id="ps-${id}" onchange="updateAllRows()"><${OPTS}/select>
+      <input type="number" class="prod-inv" id="pi-${id}" value="${inv}" min="0" step="100" oninput="updateAllRows()">
+      <button class="btn-remove" onclick="removeRow(${id})">✕</button>
+      <div class="prod-info" id="pinfo-${id}">
+        <span id="pprecio-${id}">...</span>
+        <span id="ppzas-${id}">...</span>
+      </div>
+    </div>`;
+  document.getElementById('productos-lista').appendChild(div);
+  // set selected
+  document.getElementById('ps-'+id).value = key;
+  updateRow(id);
+}
+
+function removeRow(id) {
+  const el = document.getElementById('prow-'+id);
+  if (el) el.remove();
+  updateTotalInv();
+}
+
+function getTotalInv() {
+  let total = 0;
+  document.querySelectorAll('[id^="pi-"]').forEach(el=>{ total += parseFloat(el.value)||0; });
+  return total;
+}
+
+function updateRow(id) {
+  const totalInv = getTotalInv();
+  const key = document.getElementById('ps-'+id).value;
+  const inv = parseFloat(document.getElementById('pi-'+id).value)||0;
+  const p = PRODS[key];
+  const precio = getPrecio(p, inv, totalInv);
+  const pzas = Math.floor(inv/precio);
+  const desc = getDescuento(totalInv);
+  const descTxt = desc > 0 ? ` <span style="color:var(--green)">(${(desc*100).toFixed(0)}% desc.)</span>` : '';
+  document.getElementById('pprecio-'+id).innerHTML = `Precio c/u: <span>$${precio.toFixed(2)}</span>${descTxt}`;
+  document.getElementById('ppzas-'+id).innerHTML = `Piezas: <span>${pzas}</span>`;
+  updateTotalInv();
+}
+
+function updateAllRows() {
+  document.querySelectorAll('[id^="pi-"]').forEach(el=>{
+    const id = el.id.replace('pi-','');
+    updateRow(id);
+  });
+}
+
+function updateTotalInv() {
+  let total = 0;
+  document.querySelectorAll('[id^="pi-"]').forEach(el=>{ total += parseFloat(el.value)||0; });
+  document.getElementById('total-inv').textContent = fmt(total);
+  // Show discount level
+  const desc = getDescuento(total);
+  const nivel = total>=10000?'Mayoreo Especial + 40% desc. extra':total>=4000?'Mayoreo Especial + 30% desc. extra':total>=2700?'Mayoreo Especial + 20% desc. extra':total>=1000?'Mayoreo Especial + 10% desc. extra':'Mayoreo Especial activo';
+  const el = document.getElementById('desc-nivel');
+  if(el) { el.textContent = nivel; el.style.display = 'block'; }
+}
+
+function syncSliders(changed) {
+  let v2=+document.getElementById('sl-2pagos').value;
+  let vc=+document.getElementById('sl-contado').value;
+  let vm=+document.getElementById('sl-mayoreo').value;
+  let total=v2+vc+vm;
+  if(total!==100){
+    let diff=total-100;
+    if(changed==='2pagos'){let a=Math.min(vc,diff);vc-=a;diff-=a;vm=Math.max(0,vm-diff);}
+    else if(changed==='contado'){let a=Math.min(v2,diff);v2-=a;diff-=a;vm=Math.max(0,vm-diff);}
+    else{let a=Math.min(v2,diff);v2-=a;diff-=a;vc=Math.max(0,vc-diff);}
+    v2=Math.max(0,Math.min(100,v2));vc=Math.max(0,Math.min(100,vc));vm=Math.max(0,Math.min(100,vm));
+  }
+  ['2pagos','contado','mayoreo'].forEach((k,i)=>{
+    const val=[v2,vc,vm][i];
+    document.getElementById('sl-'+k).value=val;
+    document.getElementById('val-'+k).textContent=val+'%';
+    document.getElementById('fill-'+k).style.width=val+'%';
+  });
+  document.getElementById('aviso-suma').style.display=(v2+vc+vm!==100)?'block':'none';
+}
+
+function calcular() {
+  const pct2=+document.getElementById('sl-2pagos').value/100;
+  const pctC=+document.getElementById('sl-contado').value/100;
+  const pctM=+document.getElementById('sl-mayoreo').value/100;
+  if(Math.round((pct2+pctC+pctM)*100)!==100){document.getElementById('aviso-suma').style.display='block';return;}
+
+  const rows = document.querySelectorAll('[id^="pi-"]');
+  if(!rows.length){alert('Agrega al menos un producto');return;}
+
+  // Primero calcular el total de inversión para aplicar descuento correcto a todos
+  let totalInv = 0;
+  rows.forEach(el=>{ totalInv += parseFloat(el.value)||0; });
+
+  let totalPzas=0, totalIng2=0, totalIngC=0, totalIngM=0, totalCostoReal=0;
+  let pbHtml = '';
+
+  rows.forEach(el=>{
+    const id = el.id.replace('pi-','');
+    const key = document.getElementById('ps-'+id).value;
+    const inv = parseFloat(el.value)||0;
+    if(!inv) return;
+    const p = PRODS[key];
+    const costo = getPrecio(p, inv, totalInv);
+    const pzas = Math.floor(inv/costo);
+    const costoReal = pzas*costo;
+
+    const pz2=Math.round(pzas*pct2);
+    const pzC=Math.round(pzas*pctC);
+    const pzM=Math.max(0,pzas-pz2-pzC);
+
+    const ing2=pz2*p.com;
+    const ingC=pzC*p.com*0.80;
+    const ingM=pzM*p.com*0.583;
+    const ingTot=ing2+ingC+ingM;
+
+    totalPzas+=pzas; totalCostoReal+=costoReal;
+    totalIng2+=ing2; totalIngC+=ingC; totalIngM+=ingM;
+
+    pbHtml+=`<div class="pb-row">
+      <span class="pb-name">${p.n}</span>
+      <span class="pb-inv">${fmt(costoReal)}</span>
+      <span class="pb-pzas">${pzas}</span>
+      <span class="pb-total">${fmt(ingTot)}</span>
+    </div>`;
+  });
+
+  const totalVentas = totalIng2+totalIngC+totalIngM;
+  const multi = totalCostoReal>0 ? totalVentas/totalCostoReal : 0;
+  const totalPz2=Math.round(totalPzas*pct2);
+  const totalPzC=Math.round(totalPzas*pctC);
+  const totalPzM=Math.max(0,totalPzas-totalPz2-totalPzC);
+
+  // Hero
+  document.getElementById('res-total').textContent = fmt(totalVentas);
+  document.getElementById('res-sub').textContent = `Con una inversión total de ${fmt(totalCostoReal)}`;
+  document.getElementById('res-multi').textContent = `×${multi.toFixed(1)} tu inversión`;
+
+  // Canales
+  document.getElementById('pzas-2p').textContent = totalPz2+' pzas';
+  document.getElementById('pzas-ct').textContent  = totalPzC+' pzas';
+  document.getElementById('pzas-my').textContent  = totalPzM+' pzas';
+  document.getElementById('ing-2p').textContent  = fmt(totalIng2);
+  document.getElementById('ing-ct').textContent  = fmt(totalIngC);
+  document.getElementById('ing-my').textContent  = fmt(totalIngM);
+
+  // Breakdown table
+  document.getElementById('pb-rows').innerHTML = pbHtml;
+  document.getElementById('pb-total-inv').textContent   = fmt(totalCostoReal);
+  document.getElementById('pb-total-pzas').textContent  = totalPzas+' pzas';
+  document.getElementById('pb-total-cobras').textContent = fmt(totalVentas);
+
+  // Resumen
+  document.getElementById('det-inv').textContent   = fmt(totalCostoReal);
+  document.getElementById('det-pzas').textContent  = totalPzas+' piezas';
+  document.getElementById('det-v2p').textContent   = fmt(totalIng2);
+  document.getElementById('det-vct').textContent   = fmt(totalIngC);
+  document.getElementById('det-vmy').textContent   = fmt(totalIngM);
+  document.getElementById('det-total').textContent = fmt(totalVentas);
+
+  // Tip
+  let tip='';
+  if(multi>=3) tip=`<strong>🔥 Increíble:</strong> Con ${fmt(totalCostoReal)} de inversión puedes cobrar ${fmt(totalVentas)}. Eso es ×${multi.toFixed(1)} tu dinero.`;
+  else if(totalPzM>totalPzas*0.3) tip=`<strong>💡 Tip:</strong> Tienes mucho porcentaje en mayoreo. Mueve más a ventas en 2 pagos y tu total de cobro sube automáticamente.`;
+  else tip=`<strong>💡 Recuerda:</strong> Entre más compras, menor es tu precio por pieza y mayor tu ganancia. ¡Cada nivel de descuento hace crecer este número!`;
+  document.getElementById('tip-main').innerHTML=tip;
+
+  document.getElementById('formulario').style.display='none';
+  document.getElementById('resultados').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetear(){
+  document.getElementById('resultados').style.display='none';
+  document.getElementById('formulario').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Init con 2 productos de ejemplo
+agregarProducto('aretes_vip', 500);
+agregarProducto('pulseras', 500);
+updateAllRows();
+</script>
+</body>
+</html>
